@@ -20,11 +20,16 @@ hidden_imports = [
     'pdfplumber',
     'python-dotenv',
     'werkzeug',
+    'src.pdf_extractor',
+    'src.portal_client',
+    'src.config',
+    'src.email_sender',
+    'src.reporting',
 ]
 
 a = Analysis(
     ['web_server.py'],
-    pathex=[],
+    pathex=['src'],
     binaries=[],
     datas=[
         ('web/templates', 'web/templates'),

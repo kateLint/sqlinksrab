@@ -21,36 +21,19 @@
 
 המערכת זמינה ב-3 דרכים שונות:
 
-### 1️⃣ Desktop App (מומלץ למחשב)
+### 1️⃣ Desktop App (מומלץ למשתמשים - ללא התקנה)
 
-**התקנה:**
+הדרך המהירה והקלה ביותר, ללא צורך בהתקנת פייתון או הגדרות מסובכות:
 
-**Windows:**
-```batch
-# הורד את הפרויקט
-git clone <repository-url>
-cd sqlinksrab
+**הורדה והפעלה:**
 
-# הרץ את סקריפט ההתקנה
-install_windows.bat
-```
+1. גש לעמוד ה-Releases ב-GitHub של הפרויקט (או בקש את קובץ ה-ZIP מהמפתח).
+2. הורד את הקובץ `HRM_Timesheet_Automation.zip`.
+3. חלץ את התיקייה למחשב שלך.
+4. לחץ לחיצה כפולה על הקובץ `HRM_Timesheet_Automation.exe` (או השם המקביל ל-Mac).
+5. המערכת תיפתח אוטומטית בדפדפן בכתובת: http://localhost:5001
 
-**Mac/Linux:**
-```bash
-# הורד את הפרויקט
-git clone <repository-url>
-cd sqlinksrab
-
-# הרץ את סקריפט ההתקנה
-chmod +x install_mac_linux.sh
-./install_mac_linux.sh
-```
-
-**הפעלה:**
-- Windows: לחץ פעמיים על `הפעל מערכת נוכחות.bat`
-- Mac/Linux: `./run.sh`
-
-המערכת תיפתח בדפדפן בכתובת: http://localhost:5001
+*אין צורך בשורת פקודה, התקנות פייתון, או כל ידע טכני.*
 
 ---
 
