@@ -72,6 +72,15 @@ function clearFile() {
     checkFormReady();
 }
 
+// Check local storage for saved email
+document.addEventListener('DOMContentLoaded', () => {
+    const savedEmail = localStorage.getItem('savedUserEmail');
+    if (savedEmail) {
+        document.getElementById('user-email').value = savedEmail;
+        document.getElementById('save-email').checked = true;
+    }
+});
+
 // Form validation
 credentialsForm.addEventListener('input', checkFormReady);
 
@@ -119,6 +128,13 @@ submitBtn.addEventListener('click', async () => {
         addLog('מתחיל תהליך אוטומציה...', 'info');
 
         const userEmail = document.getElementById('user-email').value;
+        const saveEmail = document.getElementById('save-email').checked;
+
+        if (saveEmail && userEmail) {
+            localStorage.setItem('savedUserEmail', userEmail);
+        } else {
+            localStorage.removeItem('savedUserEmail');
+        }
 
         const submitResponse = await fetch('/api/submit', {
             method: 'POST',
