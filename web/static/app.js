@@ -118,7 +118,7 @@ submitBtn.addEventListener('click', async () => {
         // Start automation
         addLog('מתחיל תהליך אוטומציה...', 'info');
 
-        const emailConsent = document.getElementById('email-consent').checked;
+        const userEmail = document.getElementById('user-email').value;
 
         const submitResponse = await fetch('/api/submit', {
             method: 'POST',
@@ -129,7 +129,7 @@ submitBtn.addEventListener('click', async () => {
                 filename,
                 employee_id: employeeId,
                 password,
-                send_email_consent: emailConsent
+                user_email: userEmail
             })
         });
 

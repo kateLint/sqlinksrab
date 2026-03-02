@@ -46,7 +46,7 @@ class JobStatus:
     FAILED = 'failed'
 
 
-def create_job(job_id: str, filename: str, employee_id: str, password: str, send_email_consent: bool = False):
+def create_job(job_id: str, filename: str, employee_id: str, password: str, user_email: str = None):
     """Create a new automation job."""
     jobs[job_id] = {
         'id': job_id,
@@ -68,7 +68,7 @@ def create_job(job_id: str, filename: str, employee_id: str, password: str, send
         'audit_report_path': None,
         'otp_code': None,  # Will be filled when user submits OTP
         'portal_client': None,  # Store client reference for OTP filling
-        'send_email_consent': send_email_consent  # User consent for email notification
+        'user_email': send_email_consent  # Store user email
     }
     
     # Start the automation in a background thread
@@ -228,9 +228,9 @@ def run_automation(job_id: str):
             update_job_status(job_id, JobStatus.COMPLETED, 'הושלם בהצלחה!', 100)
             add_log(job_id, f'✓ תהליך הושלם! נוצרו: {created}, דולגו: {skipped}, נכשלו: {failed}', 'success')
             
-            # Send email notification if user consented
-            if job.get('send_email_consent', False):
-                add_log(job_id, '📧 שולח דוח במייל...', 'info')
+            # Send email notification if user provided email
+            if job.get('user_email'):
+                add_log(job_id, f"📧 שולח דוח ל-{job.get('user_email')}...", 'info')
                 try:
                     email_sender = EmailSender()
                     completion_time = datetime.now()
@@ -243,11 +243,13 @@ def run_automation(job_id: str):
                             'skipped': skipped,
                             'failed': failed
                         },
-                        timestamp=completion_time
+                        timestamp=completion_time,
+                        user_email=job.get('user_email'),
+                        pdf_path=str(pdf_path)
                     )
                     
                     if email_sent:
-                        add_log(job_id, '✓ דוח נשלח בהצלחה למייל hours@sqlink.com', 'success')
+                        add_log(job_id, f'✓ דוח נשלח בהצלחה למייל {job.get("user_email")}', 'success')
                     else:
                         add_log(job_id, '⚠️ שליחת המייל נכשלה - בדוק הגדרות SMTP', 'warning')
                 except Exception as e:
@@ -311,7 +313,7 @@ def submit_job():
         data['filename'],
         data['employee_id'],
         data['password'],
-        data.get('send_email_consent', False)  # Optional email consent
+        data.get('user_email')  # Optional user email
     )
     
     return jsonify({'job_id': job_id})

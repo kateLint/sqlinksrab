@@ -8,6 +8,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+from email.mime.application import MIMEApplication
 from typing import Dict, Optional
 import logging
 
@@ -38,10 +39,12 @@ class EmailSender:
         employee_id: str,
         target_month: str,
         stats: Dict[str, int],
-        timestamp: Optional[datetime] = None
+        timestamp: Optional[datetime],
+        user_email: str,
+        pdf_path: str
     ) -> bool:
         """
-        Send a completion report email to hours@sqlink.com.
+        Send a completion report email to the user with the attached PDF.
         
         Args:
             employee_id: Employee ID (will be partially masked for privacy)
@@ -71,7 +74,7 @@ class EmailSender:
             msg = MIMEMultipart('alternative')
             msg['Subject'] = f'דוח מילוי נוכחות - {target_month}'
             msg['From'] = f'{self.from_name} <{self.from_email}>'
-            msg['To'] = 'hours@sqlink.com'
+            msg['To'] = user_email
             
             # Create plain text version
             text_content = f"""
@@ -224,8 +227,15 @@ class EmailSender:
             msg.attach(part1)
             msg.attach(part2)
             
+            # Attach PDF
+            if pdf_path and os.path.exists(pdf_path):
+                with open(pdf_path, 'rb') as f:
+                    pdf_attachment = MIMEApplication(f.read(), _subtype="pdf")
+                    pdf_attachment.add_header('Content-Disposition', 'attachment', filename=os.path.basename(pdf_path))
+                    msg.attach(pdf_attachment)
+            
             # Send email
-            logger.info(f"Sending completion report to hours@sqlink.com via {self.smtp_host}:{self.smtp_port}")
+            logger.info(f"Sending completion report to {user_email} via {self.smtp_host}:{self.smtp_port}")
             
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()
