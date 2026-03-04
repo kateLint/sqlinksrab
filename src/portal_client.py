@@ -361,22 +361,39 @@ class PortalClient:
             return False
 
     def _get_current_month_text(self) -> str:
-        """Read the current month/year text from the calendar header."""
+        """Read the current month/year text from the calendar header or dates on the page."""
         try:
-            # Look for text that contains a year (4 digits)
-            # The header shows something like "ינואר 2026" or "פברואר 2026"
-            for month_name in HEBREW_MONTHS.values():
-                element = self.page.query_selector(f"text=/{month_name}.*\\d{{4}}/")
-                if element:
-                    return element.inner_text()
-                element = self.page.query_selector(f"text=/\\d{{4}}.*{month_name}/")
-                if element:
-                    return element.inner_text()
+            import re
+            
+            # Extract all text from the page to find actual dates presented in the calendar (DD/MM/YYYY format)
+            text = self.page.evaluate("document.body.innerText")
+            
+            # The calendar typically renders many day cells with full dates like "01/03/2026"
+            # We count them to find the predominant month (to ignore overlap days from prev/next months)
+            matches = re.findall(r'\b\d{2}/(\d{2})/(\d{4})\b', text)
+            if matches:
+                from collections import Counter
+                most_common = Counter(matches).most_common(1)
+                if most_common:
+                    month_str, year_str = most_common[0][0]
+                    month_num = int(month_str)
+                    if month_num in HEBREW_MONTHS:
+                        return f"{HEBREW_MONTHS[month_num]} {year_str}"
 
-            # Fallback: try to find any element with a year
-            header = self.page.query_selector(Selectors.MONTH_YEAR_HEADER)
-            if header:
-                return header.inner_text()
+            # Fallback: Check header selectors for Hebrew month names
+            try:
+                header_selectors = [Selectors.MONTH_YEAR_HEADER, "[class*='month-picker']", ".cv-header"]
+                for sel in header_selectors:
+                    el = self.page.query_selector(sel)
+                    if el:
+                        header_text = el.inner_text()
+                        for month_name in HEBREW_MONTHS.values():
+                            if month_name in header_text:
+                                year_match = re.search(r'202\d', header_text)
+                                year = year_match.group(0) if year_match else "2026"
+                                return f"{month_name} {year}"
+            except Exception:
+                pass
 
             return ""
         except Exception:
@@ -414,20 +431,43 @@ class PortalClient:
         Returns True if the day cell was found and clicked.
         """
         try:
-            # Use the date-specific class selector which is most reliable
-            # Format: div.cv-day.dYYYY-MM-DD
             year, month = map(int, self.config.target_month.split("-"))
             date_class = f"d{year:04d}-{month:02d}-{day:02d}"
-            selector = f"div.cv-day.{date_class}"
             
-            cell = self.page.query_selector(selector)
+            # Primary selector: exact date class
+            selectors_to_try = [
+                f"div.cv-day.{date_class}",
+                f"div.cv-day:has-text('{day}')",
+                f"div.cv-day:has-text('{day:02d}')",
+                Selectors.day_cell(day)
+            ]
+            
+            cell = None
+            used_selector = ""
+            
+            for selector in selectors_to_try:
+                try:
+                    elements = self.page.query_selector_all(selector)
+                    for el in elements:
+                        text = el.inner_text().strip()
+                        # Verify the cell actually represents this day number
+                        # It might just be "1" or "1\nSome Event"
+                        if text == str(day) or text == f"{day:02d}" or text.startswith(f"{day}\n") or text.startswith(f"{day:02d}\n"):
+                            cell = el
+                            used_selector = selector
+                            break
+                    if cell:
+                        break
+                except Exception:
+                    continue
+            
             if cell:
-                print(f"  Clicking day {day}...")
+                print(f"  Clicking day {day} (via {used_selector})...")
                 cell.click()
                 time.sleep(2)  # Wait for side panel to update
                 return True
             
-            print(f"  Day cell not found for day {day} (selector: {selector})")
+            print(f"  Day cell not found for day {day} (tried multiple selectors)")
             return False
 
         except Exception as e:

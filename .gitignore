@@ -1,17 +1,38 @@
-.env
-output/
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-.coverage
-htmlcov/
-dist/
-build/
+*.py[cod]
 *.egg-info/
-.vscode/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.spec.bak
+
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets & local config
+.env
+config.json
+
+# Uploads & output (runtime data)
+uploads/*
+!uploads/.gitkeep
+output/*
+!output/.gitkeep
+
+# Logs
 *.log
-screenshots/
-*.pdf

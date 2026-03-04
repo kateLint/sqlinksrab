@@ -68,7 +68,7 @@ def create_job(job_id: str, filename: str, employee_id: str, password: str, user
         'audit_report_path': None,
         'otp_code': None,  # Will be filled when user submits OTP
         'portal_client': None,  # Store client reference for OTP filling
-        'user_email': send_email_consent  # Store user email
+        'user_email': user_email  # Store user email
     }
     
     # Start the automation in a background thread
@@ -133,7 +133,18 @@ def run_automation(job_id: str):
         add_log(job_id, f'זוהה חודש יעד: {target_month}', 'success')
         
         # Convert list of TimesheetRecord objects to dict with dates as keys
-        records = {record.work_date: record for record in records_list}
+        # STRICT FILTER: Discard any dates jumping to previous/next month (like December 28th captured via OCR spillover/bleed)
+        records = {}
+        target_year, target_month_val = target_month.split('-')
+        for record in records_list:
+            if record.work_date.startswith(target_month):
+                try:
+                    # Basic sanity check: keep only valid days up to 31
+                    day = int(record.work_date.split('-')[2])
+                    if 1 <= day <= 31:
+                        records[record.work_date] = record
+                except ValueError:
+                    continue
         
         add_log(job_id, f'נמצאו {len(records)} רשומות', 'success')
         update_job_stats(job_id, {'total': len(records)})
@@ -393,4 +404,4 @@ if __name__ == '__main__':
     print("\nPress Ctrl+C to stop the server")
     print("=" * 70)
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=False, host='0.0.0.0', port=5001)

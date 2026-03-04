@@ -36,98 +36,93 @@ This automation requires your personal HRM credentials. Please ensure:
 - **HRM portal account** at hrm-portal.malam-payroll.com
 - **January 2026 timesheet PDF** (optional - uses mock data if not provided)
 
-## Installation
+## Quick Start (Standalone Desktop App)
 
-### 1. Clone or navigate to the project directory
+The fastest way to use the system — builds a **standalone executable** with Python, Chrome, and all dependencies bundled in. No extra installations needed!
 
+### Build (one time only)
+
+**Mac/Linux:**
 ```bash
-cd /Users/kerenlint/MyProjects/sqlinksrab
+git clone <repository-url>
+cd sqlinksrab
+chmod +x build.sh
+./build.sh
 ```
 
-### 2. Install Python dependencies
+**Windows:**
+```batch
+git clone <repository-url>
+cd sqlinksrab
+build.bat
+```
+
+The build script automatically:
+1. ✅ Creates a Python virtual environment and installs dependencies
+2. ✅ Downloads an embedded Chrome browser
+3. ✅ Packages everything into a standalone executable
+4. ✅ Copies Chrome into the final app bundle
+
+### Run
+
+**Mac/Linux:**
+```bash
+cd dist/HRM_Timesheet_Automation
+./HRM_Timesheet_Automation
+```
+
+**Windows:**
+```batch
+cd dist\HRM_Timesheet_Automation
+HRM_Timesheet_Automation.exe
+```
+
+The web interface opens automatically at **http://localhost:5001**
+
+### Distribute to Others
+
+After building, zip the entire `dist/HRM_Timesheet_Automation` folder and share it. Recipients just extract and double-click — **no installation required!**
+
+---
+
+## Manual Installation (for developers)
 
 ```bash
+cd sqlinksrab
+
+# Create virtual environment
+python -m venv venv
+
+# Activate
+# Mac/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### 3. Install Playwright browsers
-
-```bash
+# Install browsers
 playwright install chromium
-```
 
-### 4. Set up configuration
-
-Copy the example config file:
-
-```bash
+# Copy config files
 cp config.example.json config.json
-```
-
-Edit `config.json` as needed (default settings should work for most cases).
-
-### 5. Set up credentials
-
-Copy the environment template:
-
-```bash
 cp .env.example .env
+
+# Run the web server
+python web_server.py
 ```
 
-Edit `.env` and add your credentials:
-
-```bash
-HRM_EMPLOYEE_ID=your_employee_id_here
-HRM_PASSWORD=your_password_here
-```
-
-**🔒 NEVER commit the `.env` file to git!** It's already in `.gitignore`.
+---
 
 ## Usage
 
-### Dry Run Mode (Recommended First Step)
-
-Run without making any changes to see what would happen:
-
-```bash
-cd src
-python main.py --dry-run
-```
-
-This will:
-- ✅ Extract PDF data (or use mock data)
-- ✅ Log into the portal (read-only)
-- ✅ Check existing values
-- ✅ Show what actions would be taken
-- ❌ NOT make any actual changes
-
-### Headful Mode (Watch It Run)
-
-See the browser automation in action:
-
-```bash
-python main.py --headful --dry-run
-```
-
-### Normal Operation
-
-Once you're confident, run the automation:
-
-```bash
-python main.py
-```
-
-### With Custom PDF File
-
-```bash
-python main.py --pdf /path/to/your/january_2026.pdf
-```
-
-### All Options
-
-```bash
-python main.py --help
-```
+1. Open **http://localhost:5001** in your browser
+2. Upload your timesheet PDF
+3. Enter your employee ID and password
+4. Click Submit
+5. Enter the OTP code when prompted
+6. The system fills in your timesheet automatically!
 
 ## Configuration
 

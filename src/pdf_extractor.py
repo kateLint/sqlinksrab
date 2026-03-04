@@ -96,20 +96,78 @@ class PDFExtractor:
 
     def get_detected_month(self, records: List[TimesheetRecord]) -> str:
         """
-        Auto-detect the target month from extracted records.
+        Auto-detect the target month from the PDF text or extracted records.
         Returns month in YYYY-MM format.
         """
+        # First try to extract from the PDF text directly (more reliable)
+        if self.pdf_path.exists():
+            try:
+                import pdfplumber
+                with pdfplumber.open(self.pdf_path) as pdf:
+                    if len(pdf.pages) > 0:
+                        text = pdf.pages[0].extract_text()
+                        if text:
+                            # Look for year (202\d)
+                            year_match = re.search(r'202\d', text)
+                            if year_match:
+                                year = year_match.group(0)
+                                
+                                # Find all Hebrew months that appear in the text
+                                found_months = []
+                                months_dict = {
+                                    "ינואר": "01", "פברואר": "02", "מרץ": "03", "אפריל": "04",
+                                    "מאי": "05", "יוני": "06", "יולי": "07", "אוגוסט": "08",
+                                    "ספטמבר": "09", "אוקטובר": "10", "נובמבר": "11", "דצמבר": "12"
+                                }
+                                
+                                for hebrew_month, month_num in months_dict.items():
+                                    reversed_month = hebrew_month[::-1]
+                                    # Find earliest occurrence index of the month name
+                                    idx1 = text.find(hebrew_month)
+                                    idx2 = text.find(reversed_month)
+                                    
+                                    valid_idx = [i for i in (idx1, idx2) if i != -1]
+                                    if valid_idx:
+                                        found_months.append((min(valid_idx), month_num, hebrew_month))
+                                
+                                if found_months:
+                                    # Sort by earliest position in text (header is usually at top)
+                                    found_months.sort(key=lambda x: x[0])
+                                    best_match = found_months[0]
+                                    month_num = best_match[1]
+                                    hebrew_month = best_match[2]
+                                    
+                                    detected_month = f"{year}-{month_num}"
+                                    print(f"Auto-detected month from PDF header: {detected_month} ({hebrew_month} {year})")
+                                    
+                                    # Update the extractor's year/month so records get the right YYYY-MM
+                                    self.year = int(year)
+                                    self.month = int(month_num)
+                                    
+                                    # Also update the records that were already parsed
+                                    if records:
+                                        for r in records:
+                                            if r.work_date:
+                                                parts = r.work_date.split("-")
+                                                if len(parts) == 3:
+                                                    r.work_date = f"{year}-{month_num}-{parts[2]}"
+                                    
+                                    return detected_month
+            except Exception as e:
+                print(f"Error reading PDF header for month: {e}")
+
+        # Fallback to checking records if header parsing fails
         if not records:
             return self.target_month
         
-        # Get the first record with a valid date
+        # Get the first record with a valid date, but this might be wrong if self.year/self.month 
+        # were initialized wrongly. We rely on the header detection above for accuracy.
         for record in records:
             if record.work_date:
                 # Extract YYYY-MM from the date
                 parts = record.work_date.split("-")
                 if len(parts) >= 2:
                     detected_month = f"{parts[0]}-{parts[1]}"
-                    print(f"Auto-detected month from PDF: {detected_month}")
                     return detected_month
         
         # Fallback to default

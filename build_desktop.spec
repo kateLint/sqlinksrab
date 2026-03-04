@@ -9,8 +9,9 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
 
-# Collect all data files from playwright
-playwright_datas = collect_data_files('playwright')
+# Collect all data files from playwright, including browsers which are required for it to run
+raw_playwright_datas = collect_data_files('playwright')
+playwright_datas = raw_playwright_datas
 
 # Collect all submodules
 hidden_imports = [
@@ -48,6 +49,8 @@ a = Analysis(
     noarchive=False,
 )
 
+a.binaries = [b for b in a.binaries if '.local-browsers' not in b[0] and '.local-browsers' not in b[1]]
+
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
@@ -79,3 +82,12 @@ coll = COLLECT(
     upx_exclude=[],
     name='HRM_Timesheet_Automation',
 )
+
+# Append raw playwright browser tree if exists
+import os, playwright
+from PyInstaller.building.datastruct import Tree
+playwright_path = os.path.dirname(playwright.__file__)
+local_browsers_path = os.path.join(playwright_path, 'driver', 'package', '.local-browsers')
+if os.path.exists(local_browsers_path):
+    coll.dependencies.append(Tree(local_browsers_path, prefix='playwright/driver/package/.local-browsers'))
+
