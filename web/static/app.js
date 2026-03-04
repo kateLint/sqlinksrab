@@ -12,6 +12,25 @@ const credentialsForm = document.getElementById('credentials-form');
 const otpSection = document.getElementById('otp-section');
 const otpForm = document.getElementById('otp-form');
 const submitBtn = document.getElementById('submit-btn');
+const togglePasswordBtn = document.getElementById('toggle-password');
+const passwordInput = document.getElementById('password');
+const eyeIcon = document.getElementById('eye-icon');
+const eyeOffIcon = document.getElementById('eye-off-icon');
+
+if (togglePasswordBtn) {
+    togglePasswordBtn.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        if (type === 'password') {
+            eyeIcon.style.display = 'block';
+            eyeOffIcon.style.display = 'none';
+        } else {
+            eyeIcon.style.display = 'none';
+            eyeOffIcon.style.display = 'block';
+        }
+    });
+}
 const progressSection = document.getElementById('progress-section');
 const resultsSection = document.getElementById('results-section');
 const progressBar = document.getElementById('progress-bar');

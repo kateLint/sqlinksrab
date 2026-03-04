@@ -1,5 +1,7 @@
 # HRM Portal Timesheet Automation
 
+![System UI](docs/ui.png)
+
 A Python-based automation system that extracts timesheet data from a PDF and automatically enters it into the HRM portal at hrm-portal.malam-payroll.com.
 
 ## ⚠️ Important Security Notice
@@ -123,6 +125,8 @@ python web_server.py
 4. Click Submit
 5. Enter the OTP code when prompted
 6. The system fills in your timesheet automatically!
+
+![Progress Screen](docs/progress.png)
 
 ## Configuration
 
